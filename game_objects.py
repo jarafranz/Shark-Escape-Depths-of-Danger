@@ -10,7 +10,7 @@ class enemy(pygame.sprite.Sprite):
             self.y = y
             self.width = width
             self.height = height
-            self.vel = 1  # Initial velocity
+            self.vel = 1 
             self.direction = random.choice(['up', 'down', 'left', 'right'])  # Initial direction
             self.image = pygame.image.load("assets/sharkIdle (1).png")
             self.rect = self.image.get_rect()
@@ -21,7 +21,6 @@ class enemy(pygame.sprite.Sprite):
             self.load_images()
 
     def load_images(self):
-        # Load different images for shark movement directions
         self.sharkLeft = pygame.image.load('assets/sharkLeft (1).png')
         self.sharkRight = pygame.image.load('assets/sharkRight (1).png')
         self.sharkUp = pygame.image.load('assets/sharkBack (1).png')
@@ -29,7 +28,6 @@ class enemy(pygame.sprite.Sprite):
         self.sharkIdle = pygame.image.load('assets/sharkIdle (1).png')
 
     def draw(self, win):
-        # Draw the enemy's image
         if self.direction == 'right':
             win.blit(self.sharkRight, (self.x, self.y))
         elif self.direction == 'left':

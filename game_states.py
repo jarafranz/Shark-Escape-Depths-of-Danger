@@ -2,7 +2,7 @@ import pygame
 import sys
 import time
 from button import Button 
-from utils import get_font
+from utils import get_font, blur_surface
 from game_objects import enemy
 from maze import Maze, Player
 
@@ -82,13 +82,12 @@ def game_over(win):
         GAMEOVER_OUTLINE = get_font(150).render("GAME OVER", True, "White")
         GAMEOVER_RECT = GAMEOVER_TEXT.get_rect(center=(640, 130))
 
-        # Create buttons
         RESTART_BUTTON = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(640, 300), 
                                 text_input="RESTART", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
         BACK_BUTTON = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(640, 450), 
-                                text_input="BACK", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+                             text_input="BACK", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
         QUIT_BUTTON = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(640, 600), 
-                                text_input="QUIT", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+                             text_input="QUIT", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
 
         win.blit(GAMEOVER_OUTLINE, (GAMEOVER_RECT.x - 2, GAMEOVER_RECT.y - 2))  # Draw outline first
         win.blit(GAMEOVER_OUTLINE, (GAMEOVER_RECT.x + 2, GAMEOVER_RECT.y - 2))
@@ -180,13 +179,75 @@ def game_win(win, player_score):
                     pygame.quit()
                     sys.exit()
 
-        # Update display
+        pygame.display.update()
+
+def pause_screen(win):
+    pygame.mixer.music.pause()
+    paused = True
+
+    while paused:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:  # Resume game on space bar press
+                    pygame.mixer.music.unpause()
+                    paused = False
+        # Get mouse position
+        pause_mouse_pos = pygame.mouse.get_pos()
+
+        blurred_surface = win.copy()
+
+        blurred_surface = blur_surface(blurred_surface, 100)
+
+        win.blit(blurred_surface, (0, 0))
+
+        PAUSE_TEXT = get_font(150).render("PAUSED", True, "Black")
+        PAUSE_OUTLINE = get_font(150).render("PAUSED", True, "White")
+        PAUSE_RECT = PAUSE_TEXT.get_rect(center=(640, 135))
+
+        RESUME_BUTTON = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(640, 300), 
+                                text_input="RESUME", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+        RESTART_BUTTON = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(640, 450), 
+                             text_input="RESTART", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+        MENU_BUTTON = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(640, 600), 
+                             text_input="MENU", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+        
+        win.blit(PAUSE_OUTLINE, (PAUSE_RECT.x - 2, PAUSE_RECT.y - 2))  
+        win.blit(PAUSE_OUTLINE, (PAUSE_RECT.x + 2, PAUSE_RECT.y - 2))
+        win.blit(PAUSE_OUTLINE, (PAUSE_RECT.x - 2, PAUSE_RECT.y + 2))
+        win.blit(PAUSE_OUTLINE, (PAUSE_RECT.x + 2, PAUSE_RECT.y + 2))
+        win.blit(PAUSE_TEXT, PAUSE_RECT)
+        
+        for button in [RESTART_BUTTON, MENU_BUTTON, RESUME_BUTTON]:
+            button.changeColor(pause_mouse_pos)
+            button.update(win)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                # Check if buttons are clicked
+                if RESTART_BUTTON.checkForInput(pause_mouse_pos):
+                    maze.reset()
+                    maze.spawn_bubbles()
+                    return easy(win, bg, maze)
+                if MENU_BUTTON.checkForInput(pause_mouse_pos):
+                    return main_menu(win)
+                if RESUME_BUTTON.checkForInput(pause_mouse_pos):
+                    pygame.mixer.music.unpause()
+                    paused = False
+
         pygame.display.update()
 
 
 # Function to handle main menu
 def main_menu(win):
     pygame.display.set_caption("Main Menu")
+    pygame_icon = pygame.image.load("assets/logo (1).png")
+    pygame.display.set_icon(pygame_icon)
 
     play_music(main_menu_music)
 
@@ -284,6 +345,9 @@ def easy(win, bg, maze):
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        pause_screen(win)
             
             keys = pygame.key.get_pressed()
             
@@ -331,7 +395,6 @@ def easy(win, bg, maze):
 
             if man.hitbox.colliderect(shark.hitbox):
                 pygame.mixer.music.stop()
-                print("Player collided with shark!")
                 pygame.time.delay(1500)
                 game_over_music()
                 fade_in(win, dead_img, 21)
@@ -342,7 +405,6 @@ def easy(win, bg, maze):
                 game_over(win)  # Call game over screen function
                 break  # Exit from the game loop after game over screen
 
-            # Update display
             pygame.display.update()
 
 

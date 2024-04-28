@@ -87,7 +87,7 @@ class Maze():
             bubble.reset_position()
 
     def check_bubble_collision(self, player_rect):
-        # Check for collision between player and bubbles
+        
         for bubble in self.bubbles:
             if player_rect.colliderect(bubble.rect):
                 self.bubbles.remove(bubble)
